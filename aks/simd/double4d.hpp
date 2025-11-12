@@ -145,6 +145,9 @@ struct alignas(32) msk_d4 {
 
   msk_d4 operator~() const { return not_(); }
 
+  bool all() const { return mask() == 0xF; }
+  bool any() const { return mask() != 0; }
+
   static msk_d4 create_mask(int mask) {
     __m256i int_mask =
         _mm256_set_epi64x((mask & 0x8) ? -1LL : 0, (mask & 0x4) ? -1LL : 0,

@@ -11,9 +11,9 @@
 #include "simd_type.hpp"
 
 namespace aks {
-using f8_vt   = float;
+using f8_vt = float;
 using f8_simd = aks::simd_type<f8_vt, 8>;
-using f8_st   = f8_simd::type;
+using f8_st = f8_simd::type;
 
 namespace detail {
 float hadd_m256(__m256 vec) {
@@ -81,9 +81,9 @@ float hmul_m256(__m256 vec) {
 }  // namespace detail
 
 struct alignas(32) msk_f8 {
-  using simd_t                                 = f8_simd;
-  using simd_type                              = f8_st;
-  constexpr static std::size_t const dim       = simd_t::size;
+  using simd_t = f8_simd;
+  using simd_type = f8_st;
+  constexpr static std::size_t const dim = simd_t::size;
   constexpr static std::size_t const alignment = 32;
   union alignas(32) {
     f8_st data;
@@ -142,6 +142,9 @@ struct alignas(32) msk_f8 {
 
   msk_f8 operator~() const { return not_(); }
 
+  bool all() const { return mask() == 0xF; }
+  bool any() const { return mask() != 0; }
+
   static msk_f8 create_mask(int mask) {
     // Step 1: Create an integer vector with the mask bits
     __m256i int_mask = _mm256_set_epi32(
@@ -166,7 +169,7 @@ struct alignas(32) msk_f8 {
                             bool b5,
                             bool b6,
                             bool b7) {
-    auto    v        = [](bool v) { return v ? -1 : 0; };
+    auto v = [](bool v) { return v ? -1 : 0; };
     __m256i int_mask = _mm256_set_epi32(v(b7), v(b6), v(b5), v(b4), v(b3),
                                         v(b2), v(b1), v(b0));
     return msk_f8(_mm256_castsi256_ps(int_mask));
@@ -174,14 +177,14 @@ struct alignas(32) msk_f8 {
 
   static msk_f8
   create_mask(int b0, int b1, int b2, int b3, int b4, int b5, int b6, int b7) {
-    auto    v        = [](int v) { return v ? -1 : 0; };
+    auto v = [](int v) { return v ? -1 : 0; };
     __m256i int_mask = _mm256_set_epi32(v(b7), v(b6), v(b5), v(b4), v(b3),
                                         v(b2), v(b1), v(b0));
     return msk_f8(_mm256_castsi256_ps(int_mask));
   }
 
   static msk_f8 create_mask(std::bitset<8> mask) {
-    auto    v = [&](int v) { return mask[v] ? -1 : 0; };
+    auto v = [&](int v) { return mask[v] ? -1 : 0; };
     __m256i int_mask =
         _mm256_set_epi32(v(0), v(1), v(2), v(3), v(4), v(5), v(6), v(7));
     return msk_f8(_mm256_castsi256_ps(int_mask));
@@ -204,11 +207,11 @@ std::ostream& operator<<(std::ostream& os, msk_f8 const p) {
 }
 
 struct alignas(32) flt8 {
-  using mask_type                              = msk_f8;
-  using value_type                             = f8_vt;
-  using simd_type                              = f8_st;
+  using mask_type = msk_f8;
+  using value_type = f8_vt;
+  using simd_type = f8_st;
   constexpr static std::size_t const alignment = 32;
-  constexpr static std::size_t const dim       = f8_simd::size;
+  constexpr static std::size_t const dim = f8_simd::size;
 
   static flt8 load(float const* p) { return flt8(_mm256_load_ps(p)); }
   static flt8 loadu(float const* p) { return flt8(_mm256_loadu_ps(p)); }
@@ -259,7 +262,7 @@ struct alignas(32) flt8 {
   }
 
   flt8& operator=(flt8 const& other) = default;
-  flt8& operator=(flt8&& other)      = default;
+  flt8& operator=(flt8&& other) = default;
 
   flt8(flt8&& other) = default;
 
@@ -644,11 +647,11 @@ struct alignas(32) flt8 {
       f8_vt const a3 = 1.421413741;
       f8_vt const a4 = -1.453152027;
       f8_vt const a5 = 1.061405429;
-      f8_vt const p  = 0.3275911;
+      f8_vt const p = 0.3275911;
 
       // Save the sign of z
       int sign = (z < 0) ? -1 : 1;
-      z        = std::fabs(z) / std::sqrt(2.0);
+      z = std::fabs(z) / std::sqrt(2.0);
 
       // A&S formula 7.1.26
       f8_vt t = 1.0 / (1.0 + p * z);
@@ -694,7 +697,7 @@ struct alignas(32) flt8 {
       f8_vt const d4 = 3.754408661907416e+00;
 
       // Define break-points
-      f8_vt const p_low  = 0.02425;
+      f8_vt const p_low = 0.02425;
       f8_vt const p_high = 1 - p_low;
 
       // Rational approximation for lower region
@@ -749,8 +752,8 @@ flt8 operator/(f8_vt x, flt8 const y) {
 }
 
 flt8 if_then_else(flt8::mask_type const mask,
-                  flt8 const            true_value,
-                  flt8 const            false_value) {
+                  flt8 const true_value,
+                  flt8 const false_value) {
   return flt8(_mm256_blendv_ps(false_value.data, true_value.data, mask.data));
 }
 

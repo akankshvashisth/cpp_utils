@@ -1,3 +1,9 @@
+#pragma once
+
+#include "aligned_memory_resource.hpp"
+
+#if 0
+
 #include <cassert>
 #include <cstddef>
 #include <memory>
@@ -94,3 +100,5 @@ class aligned_memory_resource : public std::pmr::memory_resource {
 //   }
 // };
 }  // namespace aks
+
+#endif
