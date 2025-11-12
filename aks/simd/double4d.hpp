@@ -774,9 +774,9 @@ std::ostream &operator<<(std::ostream &os, dbl4 const p) {
   return os;
 }
 
-dbl4 if_then_else(msk_d4 mask, dbl4 const x, dbl4 const y) {
-  return dbl4{_mm256_blendv_pd(y.data, x.data, mask.data)};
-}
+// dbl4 if_then_else(msk_d4 mask, dbl4 const x, dbl4 const y) {
+//   return dbl4{_mm256_blendv_pd(y.data, x.data, mask.data)};
+// }
 
 dbl4 blend(msk_d4 mask, dbl4 const x, dbl4 const y) {
   return if_then_else(mask, x, y);
@@ -790,14 +790,12 @@ dbl4 set_positives_to_zero(dbl4 const x) {
   return blend(x < 0.0, x, dbl4::zeros());
 }
 
-dbl4 shuffle(dbl4 const v, int const i0, int const i1, int const i2,
-             int const i3) {
+template <int i0, int i1, int i2, int i3> dbl4 shuffle(dbl4 const v) {
   return dbl4(_mm256_permute4x64_pd(v.data, _MM_SHUFFLE(i3, i2, i1, i0)));
 }
 
-dbl4 reorder(dbl4 const v, int const i0, int const i1, int const i2,
-             int const i3) {
-  return shuffle(v, i0, i1, i2, i3);
+template <int i0, int i1, int i2, int i3> dbl4 reorder(dbl4 const v) {
+  return shuffle<i0, i1, i2, i3>(v);
 }
 
 dbl4 swap_values(dbl4 const v, int const i0, int const i1) {
@@ -806,17 +804,15 @@ dbl4 swap_values(dbl4 const v, int const i0, int const i1) {
   return result;
 }
 
-dbl4 reverse(dbl4 const v) { return shuffle(v, 3, 2, 1, 0); }
+dbl4 reverse(dbl4 const v) { return shuffle<3, 2, 1, 0>(v); }
 
-dbl4 rotate_left(dbl4 const v, int n) {
-  n = n % 4;
-  return shuffle(v, (0 + n) % 4, (1 + n) % 4, (2 + n) % 4, (3 + n) % 4);
+template <int n> dbl4 rotate_left(dbl4 const v) {
+  return shuffle<(0 + n) % 4, (1 + n) % 4, (2 + n) % 4, (3 + n) % 4>(v);
 }
 
-dbl4 rotate_right(dbl4 const v, int n) {
-  n = n % 4;
-  return shuffle(v, (0 - n + 4) % 4, (1 - n + 4) % 4, (2 - n + 4) % 4,
-                 (3 - n + 4) % 4);
+template <int n> dbl4 rotate_right(dbl4 const v) {
+  return shuffle<(0 - n + 4) % 4, (1 - n + 4) % 4, (2 - n + 4) % 4,
+                 (3 - n + 4) % 4>(v);
 }
 
 bool any(msk_d4 msk) {
@@ -908,6 +904,61 @@ double product(dbl4 v) {
 
   return _mm_cvtsd_f64(doubles);
 }
+
+//clang-format off
+dbl4 exp(dbl4 const v) { return v.exp(); }
+dbl4 log(dbl4 const v) { return v.log(); }
+dbl4 sin(dbl4 const v) { return v.sin(); }
+dbl4 cos(dbl4 const v) { return v.cos(); }
+dbl4 tan(dbl4 const v) { return v.tan(); }
+dbl4 sinh(dbl4 const v) { return v.sinh(); }
+dbl4 cosh(dbl4 const v) { return v.cosh(); }
+dbl4 tanh(dbl4 const v) { return v.tanh(); }
+dbl4 asin(dbl4 const v) { return v.asin(); }
+dbl4 acos(dbl4 const v) { return v.acos(); }
+dbl4 atan(dbl4 const v) { return v.atan(); }
+dbl4 sind(dbl4 const v) { return v.sind(); }
+dbl4 cosd(dbl4 const v) { return v.cosd(); }
+dbl4 tand(dbl4 const v) { return v.tand(); }
+dbl4 asinh(dbl4 const v) { return v.asinh(); }
+dbl4 acosh(dbl4 const v) { return v.acosh(); }
+dbl4 atanh(dbl4 const v) { return v.atanh(); }
+dbl4 erf(dbl4 const v) { return v.erf(); }
+dbl4 erfc(dbl4 const v) { return v.erfc(); }
+dbl4 erfinv(dbl4 const v) { return v.erfinv(); }
+dbl4 cdfnorm(dbl4 const v) { return v.cdfnorm(); }
+dbl4 cdfnorminv(dbl4 const v) { return v.cdfnorminv(); }
+
+dbl4 sqrt(dbl4 const v) { return v.sqrt(); }
+dbl4 rsqrt(dbl4 const v) { return v.rsqrt(); }
+dbl4 abs(dbl4 const v) { return v.abs(); }
+dbl4 floor(dbl4 const v) { return v.floor(); }
+dbl4 ceil(dbl4 const v) { return v.ceil(); }
+dbl4 round(dbl4 const v) { return v.round(); }
+dbl4 trunc(dbl4 const v) { return v.trunc(); }
+dbl4 round_up(dbl4 const v) { return v.round_up(); }
+dbl4 round_down(dbl4 const v) { return v.round_down(); }
+dbl4 round_half_to_even(dbl4 const v) { return v.round_half_to_even(); }
+dbl4 round_half_to_odd(dbl4 const v) { return v.round_half_to_odd(); }
+dbl4 round_half_away_from_zero(dbl4 const v) {
+  return v.round_half_away_from_zero();
+}
+dbl4 round_half_towards_zero(dbl4 const v) {
+  return v.round_half_towards_zero();
+}
+dbl4 round_half_to_zero(dbl4 const v) { return v.round_half_to_zero(); }
+dbl4 round_half_towards_neg_infinity(dbl4 const v) {
+  return v.round_half_towards_neg_infinity();
+}
+dbl4 round_half_towards_pos_infinity(dbl4 const v) {
+  return v.round_half_towards_pos_infinity();
+}
+//  dbl4 set1(double v) { return dbl4::set1(v); }
+//  dbl4 zeros() { return dbl4::zeros(); }
+//  dbl4 ones() { return dbl4::ones(); }
+dbl4 square(dbl4 const v) { return v.square(); }
+
+//clang-format on
 
 } // namespace aks
 

@@ -1,8 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <chrono>
 #include <format>
 #include <fstream>
+#include <map>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -75,46 +78,127 @@ struct high_resolution_timer_with_history {
 
 struct high_resolution_timer_manager {
   struct timer_context {
-    explicit timer_context(high_resolution_timer_with_history& timer)
+    explicit timer_context(high_resolution_timer_with_history &timer)
         : timer_(timer) {
       timer_.reset();
     }
     ~timer_context() { timer_.push(); }
-    high_resolution_timer_with_history& timer_;
+    high_resolution_timer_with_history &timer_;
   };
 
-  high_resolution_timer_with_history& get_timer(std::string const& name) {
-    return timers_[name];
+  high_resolution_timer_with_history &get_timer(std::string const &name) {
+    auto it = timers_.find(name);
+    if (it == timers_.end()) {
+      auto [new_it, inserted] =
+          timers_.emplace(name, high_resolution_timer_with_history{});
+      order_.push_back(name);
+      return new_it->second;
+    }
+    return it->second;
   }
 
-  timer_context get_context(std::string const& name) {
+  timer_context get_context(std::string const &name) {
     return timer_context(get_timer(name));
   }
 
-  void clear() { timers_.clear(); }
+  void clear() {
+    timers_.clear();
+    order_.clear();
+  }
 
   void restart_all() {
-    for (auto& timer : timers_) {
+    for (auto &timer : timers_) {
       timer.second.full_restart();
     }
   }
 
-  void dump_to_file(std::string const& filename) const {
-    std::ofstream file(filename);
-    file << "timer,microseconds" << std::endl;
-    for (auto const& timer : timers_) {
-      for (auto const& duration : timer.second.history_) {
-        file << timer.first << "," << duration.count() << std::endl;
+  void dump_to_stream(std::ostream &os) const {
+    if (timers_.empty()) {
+      os << "(no timers)\n";
+      return;
+    }
+
+    // find the widest timer name
+    std::size_t max_name = 0;
+    for (auto const &n : order_) {
+      max_name = std::max(max_name, n.size());
+    }
+    max_name =
+        std::max<std::size_t>(max_name, 4); // at least wide enough for "Name"
+
+    // header
+    os << std::format("{:<{}} {:>8} {:>12} {:>12} {:>12} {:>12}\n", "Name",
+                      max_name, "Count", "Total(us)", "Avg(us)", "Min(us)",
+                      "Max(us)");
+
+    // separator line
+    std::size_t total_width =
+        max_name + 2 + 8 + 2 + 12 + 2 + 12 + 2 + 12 + 2 + 12;
+    os << std::string(total_width, '-') << '\n';
+
+    // rows (preserve insertion order)
+    for (auto const &name : order_) {
+      auto const &history = timers_.at(name).history_;
+      std::size_t count = history.size();
+
+      long long total_us = 0;
+      long long min_us = 0;
+      long long max_us = 0;
+      if (count > 0) {
+        auto sum = std::accumulate(history.begin(), history.end(),
+                                   std::chrono::microseconds(0),
+                                   [](auto a, auto b) { return a + b; });
+        total_us = sum.count();
+        min_us = std::min_element(history.begin(), history.end())->count();
+        max_us = std::max_element(history.begin(), history.end())->count();
       }
+
+      double avg_us =
+          count ? static_cast<double>(total_us) / static_cast<double>(count)
+                : 0.0;
+
+      os << std::format("{:<{}} {:>8} {:>12} {:>12.3f} {:>12} {:>12}\n", name,
+                        max_name, count, total_us, avg_us, min_us, max_us);
+    }
+  }
+
+  void dump_to_stream_as_csv(std::ostream &os) const {
+    // header
+    os << "Name,Count,Total(us),Avg(us),Min(us),Max(us)\n";
+
+    // rows (preserve insertion order)
+    for (auto const &name : order_) {
+      auto const &history = timers_.at(name).history_;
+      std::size_t count = history.size();
+
+      long long total_us = 0;
+      long long min_us = 0;
+      long long max_us = 0;
+      if (count > 0) {
+        auto sum = std::accumulate(history.begin(), history.end(),
+                                   std::chrono::microseconds(0),
+                                   [](auto a, auto b) { return a + b; });
+        total_us = sum.count();
+        min_us = std::min_element(history.begin(), history.end())->count();
+        max_us = std::max_element(history.begin(), history.end())->count();
+      }
+
+      double avg_us =
+          count ? static_cast<double>(total_us) / static_cast<double>(count)
+                : 0.0;
+
+      os << std::format("{},{},{},{},{},{}\n", name, count, total_us, avg_us,
+                        min_us, max_us);
     }
   }
 
   std::unordered_map<std::string, high_resolution_timer_with_history> timers_;
+  std::vector<std::string> order_;
 };
 
-std::string timestamp(auto const& now) {
+std::string timestamp(auto const &now) {
   return std::format("{:%F_%H_%M_%S}",
                      std::chrono::time_point_cast<std::chrono::seconds>(now));
 }
 
-}  // namespace aks
+} // namespace aks
