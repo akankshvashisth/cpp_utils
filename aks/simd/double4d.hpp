@@ -70,7 +70,7 @@ double hmul_m256d(__m256d vec) {
   // double
   return _mm_cvtsd_f64(result);
 }
-}  // namespace detail
+} // namespace detail
 
 struct alignas(32) msk_d4 {
   using simd_type = d4_st;
@@ -174,7 +174,7 @@ struct alignas(32) msk_d4 {
   }
 };
 
-std::ostream& operator<<(std::ostream& os, msk_d4 const p) {
+std::ostream &operator<<(std::ostream &os, msk_d4 const p) {
   auto as_str = [](bool mask) {
     if (mask == 0) {
       return "F";
@@ -195,10 +195,10 @@ struct alignas(32) dbl4 {
   constexpr static size_t alignment = 32;
   constexpr static size_t dim = 4;
 
-  static dbl4 load(double const* p) { return dbl4(_mm256_load_pd(p)); }
-  static dbl4 loadu(double const* p) { return dbl4(_mm256_loadu_pd(p)); }
-  static void store(double* p, dbl4 const& v) { _mm256_store_pd(p, v.data); }
-  static void storeu(double* p, dbl4 const& v) { _mm256_storeu_pd(p, v.data); }
+  static dbl4 load(double const *p) { return dbl4(_mm256_load_pd(p)); }
+  static dbl4 loadu(double const *p) { return dbl4(_mm256_loadu_pd(p)); }
+  static void store(double *p, dbl4 const &v) { _mm256_store_pd(p, v.data); }
+  static void storeu(double *p, dbl4 const &v) { _mm256_storeu_pd(p, v.data); }
 
 #if defined(_MSC_VER)
 #pragma warning(push)
@@ -230,24 +230,23 @@ struct alignas(32) dbl4 {
 
   operator simd_type() { return data; }
 
-  dbl4(dbl4 const& other) : data(other.data) {}
+  dbl4(dbl4 const &other) : data(other.data) {}
 
-  d4_vt& operator[](int i) { return (&x)[i]; }
+  d4_vt &operator[](int i) { return (&x)[i]; }
 
   d4_vt operator[](int i) const { return (&x)[i]; }
 
-  template <typename F>
-  dbl4 transform(F f) const {
+  template <typename F> dbl4 transform(F f) const {
     return dbl4(f(x), f(y), f(z), f(w));
   }
 
-  void store(double* p) const { _mm256_store_pd(p, data); }
-  void storeu(double* p) const { _mm256_storeu_pd(p, data); }
+  void store(double *p) const { _mm256_store_pd(p, data); }
+  void storeu(double *p) const { _mm256_storeu_pd(p, data); }
 
-  dbl4& operator=(dbl4 const& other) = default;
-  dbl4& operator=(dbl4&& other) = default;
+  dbl4 &operator=(dbl4 const &other) = default;
+  dbl4 &operator=(dbl4 &&other) = default;
 
-  dbl4(dbl4&& other) = default;
+  dbl4(dbl4 &&other) = default;
 
   dbl4 operator+(dbl4 const other) const {
     return dbl4(_mm256_add_pd(data, other.data));
@@ -289,42 +288,42 @@ struct alignas(32) dbl4 {
     return dbl4(_mm256_div_pd(data, _mm256_set1_pd(other)));
   }
 
-  dbl4& operator+=(dbl4 const other) {
+  dbl4 &operator+=(dbl4 const other) {
     data = _mm256_add_pd(data, other.data);
     return *this;
   }
 
-  dbl4& operator-=(dbl4 const other) {
+  dbl4 &operator-=(dbl4 const other) {
     data = _mm256_sub_pd(data, other.data);
     return *this;
   }
 
-  dbl4& operator*=(dbl4 const other) {
+  dbl4 &operator*=(dbl4 const other) {
     data = _mm256_mul_pd(data, other.data);
     return *this;
   }
 
-  dbl4& operator/=(dbl4 const other) {
+  dbl4 &operator/=(dbl4 const other) {
     data = _mm256_div_pd(data, other.data);
     return *this;
   }
 
-  dbl4& operator+=(d4_vt other) {
+  dbl4 &operator+=(d4_vt other) {
     data = _mm256_add_pd(data, _mm256_set1_pd(other));
     return *this;
   }
 
-  dbl4& operator-=(d4_vt other) {
+  dbl4 &operator-=(d4_vt other) {
     data = _mm256_sub_pd(data, _mm256_set1_pd(other));
     return *this;
   }
 
-  dbl4& operator*=(d4_vt other) {
+  dbl4 &operator*=(d4_vt other) {
     data = _mm256_mul_pd(data, _mm256_set1_pd(other));
     return *this;
   }
 
-  dbl4& operator/=(d4_vt other) {
+  dbl4 &operator/=(d4_vt other) {
     data = _mm256_div_pd(data, _mm256_set1_pd(other));
     return *this;
   }
@@ -719,24 +718,15 @@ struct alignas(32) dbl4 {
 #endif
 };
 
-dbl4 operator+(d4_vt x, dbl4 const y) {
-  return y + x;
-}
+dbl4 operator+(d4_vt x, dbl4 const y) { return y + x; }
 
-dbl4 operator-(d4_vt x, dbl4 const y) {
-  return -y + x;
-}
+dbl4 operator-(d4_vt x, dbl4 const y) { return -y + x; }
 
-dbl4 operator*(d4_vt x, dbl4 const y) {
-  return y * x;
-}
+dbl4 operator*(d4_vt x, dbl4 const y) { return y * x; }
 
-dbl4 operator/(d4_vt x, dbl4 const y) {
-  return dbl4::set1(x) / y;
-}
+dbl4 operator/(d4_vt x, dbl4 const y) { return dbl4::set1(x) / y; }
 
-dbl4 if_then_else(dbl4::mask_type const mask,
-                  dbl4 const true_value,
+dbl4 if_then_else(dbl4::mask_type const mask, dbl4 const true_value,
                   dbl4 const false_value) {
   return dbl4(_mm256_blendv_pd(false_value.data, true_value.data, mask.data));
 }
@@ -757,8 +747,7 @@ dbl4 fnmsub(dbl4 const x, dbl4 const y, dbl4 const z) {
   return dbl4(_mm256_fnmsub_pd(x.data, y.data, z.data));
 }
 
-template <typename F>
-dbl4 transform(dbl4 const x, dbl4 const y, F f) {
+template <typename F> dbl4 transform(dbl4 const x, dbl4 const y, F f) {
   return dbl4(f(x.x, y.x), f(x.y, y.y), f(x.z, y.z), f(x.w, y.w));
 }
 
@@ -780,13 +769,148 @@ dbl4 pow(dbl4 const x, dbl4 const y) {
 #endif
 }
 
-std::ostream& operator<<(std::ostream& os, dbl4 const p) {
+std::ostream &operator<<(std::ostream &os, dbl4 const p) {
   os << "dbl4( " << p.x << ", " << p.y << ", " << p.z << ", " << p.w << " )";
   return os;
 }
 
-}  // namespace aks
+dbl4 if_then_else(msk_d4 mask, dbl4 const x, dbl4 const y) {
+  return dbl4{_mm256_blendv_pd(y.data, x.data, mask.data)};
+}
 
-#endif  // DOUBLE4D_HPP
+dbl4 blend(msk_d4 mask, dbl4 const x, dbl4 const y) {
+  return if_then_else(mask, x, y);
+}
+
+dbl4 set_negatives_to_zero(dbl4 const x) {
+  return blend(x > 0.0, x, dbl4::zeros());
+}
+
+dbl4 set_positives_to_zero(dbl4 const x) {
+  return blend(x < 0.0, x, dbl4::zeros());
+}
+
+dbl4 shuffle(dbl4 const v, int const i0, int const i1, int const i2,
+             int const i3) {
+  return dbl4(_mm256_permute4x64_pd(v.data, _MM_SHUFFLE(i3, i2, i1, i0)));
+}
+
+dbl4 reorder(dbl4 const v, int const i0, int const i1, int const i2,
+             int const i3) {
+  return shuffle(v, i0, i1, i2, i3);
+}
+
+dbl4 swap_values(dbl4 const v, int const i0, int const i1) {
+  dbl4 result = v;
+  std::swap(result[i0], result[i1]);
+  return result;
+}
+
+dbl4 reverse(dbl4 const v) { return shuffle(v, 3, 2, 1, 0); }
+
+dbl4 rotate_left(dbl4 const v, int n) {
+  n = n % 4;
+  return shuffle(v, (0 + n) % 4, (1 + n) % 4, (2 + n) % 4, (3 + n) % 4);
+}
+
+dbl4 rotate_right(dbl4 const v, int n) {
+  n = n % 4;
+  return shuffle(v, (0 - n + 4) % 4, (1 - n + 4) % 4, (2 - n + 4) % 4,
+                 (3 - n + 4) % 4);
+}
+
+bool any(msk_d4 msk) {
+  // return !_mm256_testz_pd(msk.data, msk.data);
+  return _mm256_movemask_pd(msk.data) != 0;
+}
+
+bool all(msk_d4 msk) {
+  // return _mm256_testc_pd(msk.data, msk.data);
+  return _mm256_movemask_pd(msk.data) == 0xF;
+}
+
+double horizontal_min(dbl4 v) {
+  __m128d low = _mm256_castpd256_pd128(v.data);
+  __m128d high = _mm256_extractf128_pd(v.data, 1);
+  __m128d min = _mm_min_pd(low, high);
+  min = _mm_min_pd(min, _mm_permute_pd(min, 1));
+  return _mm_cvtsd_f64(min);
+}
+
+double horizontal_max(dbl4 v) {
+  __m128d low = _mm256_castpd256_pd128(v.data);
+  __m128d high = _mm256_extractf128_pd(v.data, 1);
+  __m128d max = _mm_max_pd(low, high);
+  max = _mm_max_pd(max, _mm_permute_pd(max, 1));
+  return _mm_cvtsd_f64(max);
+}
+
+double horizontal_add(dbl4 v) {
+  __m128d vlow = _mm256_castpd256_pd128(v.data);
+  __m128d vhigh = _mm256_extractf128_pd(v.data, 1);
+  __m128d total = _mm_add_pd(vlow, vhigh);
+  total = _mm_hadd_pd(total, total);
+  return _mm_cvtsd_f64(total);
+}
+
+double horizontal_product(dbl4 v) {
+  __m128d low = _mm256_castpd256_pd128(v.data);
+  __m128d high = _mm256_extractf128_pd(v.data, 1);
+  __m128d prod = _mm_mul_pd(low, high);
+  prod = _mm_mul_pd(prod, _mm_permute_pd(prod, 1));
+  return _mm_cvtsd_f64(prod);
+}
+
+double max(dbl4 v) {
+  __m256d lo = _mm256_unpacklo_pd(v.data, v.data);
+  __m256d hi = _mm256_unpackhi_pd(v.data, v.data);
+
+  __m256d max_pairs = _mm256_max_pd(lo, hi);
+
+  __m128d max_doubles = _mm256_extractf128_pd(max_pairs, 1);
+  max_doubles = _mm_max_sd(max_doubles, _mm256_castpd256_pd128(max_pairs));
+
+  return _mm_cvtsd_f64(max_doubles);
+}
+
+double min(dbl4 v) {
+  __m256d lo = _mm256_unpacklo_pd(v.data, v.data);
+  __m256d hi = _mm256_unpackhi_pd(v.data, v.data);
+
+  __m256d min_pairs = _mm256_min_pd(lo, hi);
+
+  __m128d min_doubles = _mm256_extractf128_pd(min_pairs, 1);
+  min_doubles = _mm_min_sd(min_doubles, _mm256_castpd256_pd128(min_pairs));
+
+  return _mm_cvtsd_f64(min_doubles);
+}
+
+double sum(dbl4 v) {
+  __m256d lo = _mm256_unpacklo_pd(v.data, v.data);
+  __m256d hi = _mm256_unpackhi_pd(v.data, v.data);
+
+  __m256d add_pairs = _mm256_add_pd(lo, hi);
+
+  __m128d add_doubles = _mm256_extractf128_pd(add_pairs, 1);
+  add_doubles = _mm_add_sd(add_doubles, _mm256_castpd256_pd128(add_pairs));
+
+  return _mm_cvtsd_f64(add_doubles);
+}
+
+double product(dbl4 v) {
+  __m256d lo = _mm256_unpacklo_pd(v.data, v.data);
+  __m256d hi = _mm256_unpackhi_pd(v.data, v.data);
+
+  __m256d pairs = _mm256_mul_pd(lo, hi);
+
+  __m128d doubles = _mm256_extractf128_pd(pairs, 1);
+  doubles = _mm_mul_sd(doubles, _mm256_castpd256_pd128(pairs));
+
+  return _mm_cvtsd_f64(doubles);
+}
+
+} // namespace aks
+
+#endif // DOUBLE4D_HPP
 
 // NOLINTEND
