@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iomanip>
+#include <iostream>
 #include <memory_resource>
 #include <ranges>
 #include <span>
@@ -39,7 +41,7 @@ template <typename T> struct grid_2d {
     return *this;
   }
 
-  auto const get_allocator() const { return data_.get_allocator(); }
+  auto get_allocator() const { return data_.get_allocator(); }
 
   grid_2d &operator=(grid_2d &&other) noexcept {
     if (this != &other) {
@@ -170,14 +172,29 @@ private:
 
 template <typename T>
 std::ostream &operator<<(std::ostream &os, grid_2d<T> const &grid) {
-  for (size_t i = 0; i < grid.size<0>(); ++i) {
-    for (size_t j = 0; j < grid.size<1>(); ++j) {
+  for (size_t i = 0; i < grid.template size<0>(); ++i) {
+    for (size_t j = 0; j < grid.template size<1>(); ++j) {
       if constexpr (std::is_floating_point_v<T>) {
         os << std::setw(8) << std::setprecision(6) << grid(i, j) << " ";
       } else if constexpr (std::is_same_v<T, uint8_t>) {
         os << std::setw(3) << static_cast<int>(grid(i, j)) << " ";
       } else {
         os << std::setw(6) << grid(i, j) << " ";
+      }
+    }
+    os << "\n";
+  }
+  return os;
+}
+
+template <typename T>
+std::ostream &to_csv(std::ostream &os, grid_2d<T> const &grid) {
+  os << std::fixed << std::setprecision(10);
+  for (size_t i = 0; i < grid.template size<0>(); ++i) {
+    for (size_t j = 0; j < grid.template size<1>(); ++j) {
+      os << grid(i, j);
+      if (j < grid.template size<1>() - 1) {
+        os << ",";
       }
     }
     os << "\n";
